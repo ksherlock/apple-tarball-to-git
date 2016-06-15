@@ -1,0 +1,11 @@
+load opensource.apple.com tarballs into a nice git repo.
+
+Usage:
+
+ruby -w appl-tarball-to-git basic_cmds
+
+(creates basic_cmds.git bare repo.)
+
+git clone ./basic_cmds.git
+
+(creates a more usable basic_cmds git repo)
