@@ -82,7 +82,7 @@ end
 config = {
 	:tags => true,
 	:date => true,
-	:author => nil,
+	:author => "Apple <opensource@apple.com>",
 	:verbose => false,
 	:update => false,
 }
@@ -109,6 +109,10 @@ OptionParser.new { |opts|
     opts.on('--author [NAME]', String, 'Specify commit author') do |x|
     	config[:author] = x
     end
+
+    opts.on('--no-author', 'Don\'t specify the commit author') do |x|
+    	config[:author] = nil
+	end
 
     opts.on('--update', 'Update an existing repository') do |x|
     	config[:update] = true
