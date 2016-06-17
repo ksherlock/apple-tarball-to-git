@@ -46,11 +46,11 @@ def ls_url(url)
 	puts "fetching #{url}"
 
 	page = Nokogiri::HTML(open(url))
-	page.css('a') 
+	return page.css('a') 
 	. map { |e|  e['href']} 
 	. select {|href| href =~ /\.tar\.gz$/}
 	. uniq
-	.sort &method(:compare_versions)
+	.sort(&method(:compare_versions))
 end
 
 def download_url(url, dest)
