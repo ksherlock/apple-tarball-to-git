@@ -77,6 +77,41 @@ def download_url(url, dest)
 	return Time.at(date)
 end
 
+
+def get_max_tag(git_dir)
+
+	# check for a tag that matches master, then remove any files <= it.
+	master = ""
+	tags = {}
+
+	IO.popen(['git', '--git-dir', git_dir, 'show-ref'], "r") {|io|
+		io.each_line {|line|
+			x = line.match(/^([A-Fa-f0-9]+)\s+(.*)$/)
+			if (x)
+				hash = x[1]
+				name = x[2]
+				case name
+				when "refs/heads/master"
+					master = hash
+				when /^refs\/tags\/(.*)$/
+					version = $1
+					# could be multiple tags with the same hash...
+					tags[hash] = [] unless tags[hash]
+					tags[hash].push(version)
+				end
+			end
+		}
+	}
+
+	return nil if master == "" # ???
+	return nil unless tags[master]
+
+	return tags[master].max(&method(:compare_versions))
+end
+
+
+
+
 # begin!
 
 config = {
@@ -132,7 +167,28 @@ git_dir = "#{target}.git"
 
 # 1. create a git repo...
 
-ok = system('git', 'init', '--bare', git_dir)
+
+case [config[:update], File.directory?(git_dir) ]
+	when [true, false]
+		$stderr.puts "git repo does not exist."
+		exit 1
+
+	when [false, true]
+		$stderr.puts "git repo already exists. use --update to update "
+		exit 1
+
+	when [false, false]
+		ok = system('git', 'init', '--bare', git_dir)
+
+	when [true, true]
+		max_tag = get_max_tag(git_dir)
+		if max_tag.nil?
+			$stderr.puts "Unable to update repo"
+			exit 1
+		end
+		puts "Updating from #{max_tag}"
+end
+
 
 # 2. get the tarballs...
 
@@ -143,6 +199,11 @@ tmpdir = Dir.mktmpdir
 files = ls_url(url)
 
 files.each {|file|
+
+	# --update -- filter out old tags
+	if config[:update]
+		next if compare_versions(max_tag, file) >= 0
+	end
 
 	url = "#{URL_BASE}#{target}/#{file}"
 
