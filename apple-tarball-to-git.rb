@@ -138,7 +138,6 @@ tmpdir = Dir.mktmpdir
 
 files = ls_url(url)
 
-
 files.each {|file|
 
 	url = "#{URL_BASE}#{target}/#{file}"
@@ -150,9 +149,17 @@ files.each {|file|
 	date = download_url(url, local)
 
 	ok = system('tar', '-x', '-C', tmpdir, '-f', local, '-z')
-	ok = system('git', '--git-dir', git_dir, '--work-tree', wt, 'add', '.')
 
-	ok = system('git', '--git-dir', git_dir, '--work-tree', wt, 'commit', '--date', date.to_s, '-a', '-m', basename)
+	git_argv = ['git', '--git-dir', git_dir, '--work-tree', wt]
+
+	ok = system(*git_argv, 'add', '.')
+
+
+	extra = []
+	extra += ['--date', date.to_s] if config[:date]
+	extra += ['--author', config[:author]] unless config[:author].nil?
+
+	ok = system(*git_argv, 'commit', '-a', '-m', basename, *extra)
 	ok = system('git', '--git-dir', git_dir, 'tag', basename) if config[:tags]
 
 	FileUtils.remove_entry(wt, true)
