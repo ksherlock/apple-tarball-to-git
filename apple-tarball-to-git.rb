@@ -14,6 +14,32 @@ require 'zlib'
 
 URL_BASE = "http://opensource.apple.com/tarballs/"
 
+def compare_versions(a,b)
+
+	# name-(version string).tar.gz
+	# version may be a simple number or more complex.
+	# eg xnu-792.tar.gz and xnu-792.6.76.tar.gz
+
+	a = a.chomp(".tgz").chomp(".gz").chomp(".tar")
+	b = b.chomp(".tgz").chomp(".gz").chomp(".tar")
+	va = $1.split('.') if a.match( /-([0-9.]+)$/)
+	vb = $1.split('.') if b.match( /-([0-9.]+)$/)
+
+	va.reverse!
+	vb.reverse!
+
+	while !va.empty? && !vb.empty?
+		ta = va.pop.to_i
+		tb = vb.pop.to_i
+		next if ta == tb
+		return ta <=> tb
+
+	end
+
+	return va.count <=> vb.count
+
+end
+
 def ls_url(url)
 	# returns a list of the tarballs
 	# raises error on 404, etc
@@ -24,12 +50,7 @@ def ls_url(url)
 	. map { |e|  e['href']} 
 	. select {|href| href =~ /\.tar\.gz$/}
 	. uniq
-	. sort {|a,b|
-		# alpha sorting not correct.
-		# name-version[.subversion].tar.gz
-		# (this isn't quite correct, either...sigh!)
-		a.chomp(".tar.gz") <=> b.chomp(".tar.gz")
-	}
+	.sort &method(:compare_versions)
 end
 
 def download_url(url, dest)
