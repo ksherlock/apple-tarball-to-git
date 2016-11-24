@@ -12,7 +12,7 @@ require 'zlib'
 #
 #
 
-URL_BASE = "http://opensource.apple.com/tarballs/"
+URL_BASE = "https://opensource.apple.com/tarballs/"
 
 def compare_versions(a,b)
 
